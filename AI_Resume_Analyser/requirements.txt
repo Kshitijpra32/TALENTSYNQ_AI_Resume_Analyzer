@@ -1,5 +1,6 @@
 streamlit
 streamlit-option-menu
+streamlit-lottie
 python-docx
 pandas
 plotly
@@ -10,8 +11,7 @@ nltk
 scikit-learn
 sqlalchemy
 openpyxl
-streamlit-lottie
+xlsxwriter
 requests
 spacy
 PyPDF2
-python-dotenv
