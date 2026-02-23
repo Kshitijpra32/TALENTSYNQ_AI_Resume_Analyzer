@@ -1,6 +1,39 @@
-// filepath: /D:/GIST/Smart-AI-Resume-Analyzer/.gitignore
+# Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual Environment
 venv/
 env/
+ENV/
+
+# Environment Variables
 .env
+.env.local
+
+# Database files (sensitive data - do not push)
+*.db
+*.sqlite
+*.sqlite3
+
+# Excel exports
+*.xlsx
+*.csv
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
