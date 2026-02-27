@@ -1096,24 +1096,40 @@ class ResumeApp:
             "Get instant AI-powered feedback to optimize your resume"
         )
         
-        # Job Role Selection
-        categories = list(self.job_roles.keys())
-        selected_category = st.selectbox("Job Category", categories)
+        # Job Role / JD Input Mode
+        matching_mode = st.radio("Analysis Mode", ["Select Pre-defined Role", "Paste Custom Job Description"], horizontal=True)
         
-        roles = list(self.job_roles[selected_category].keys())
-        selected_role = st.selectbox("Specific Role", roles)
-        
-        role_info = self.job_roles[selected_category][selected_role]
-        
-        # Display role information
-        st.markdown(f"""
-        <div style='background-color: #1e1e1e; padding: 20px; border-radius: 10px; margin: 10px 0;'>
-            <h3>{selected_role}</h3>
-            <p>{role_info['description']}</p>
-            <h4>Required Skills:</h4>
-            <p>{', '.join(role_info['required_skills'])}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        role_info = {}
+        if matching_mode == "Select Pre-defined Role":
+            # Job Role Selection
+            categories = list(self.job_roles.keys())
+            selected_category = st.selectbox("Job Category", categories)
+            
+            roles = list(self.job_roles[selected_category].keys())
+            selected_role = st.selectbox("Specific Role", roles)
+            
+            role_info = self.job_roles[selected_category][selected_role]
+            
+            # Display role information
+            st.markdown(f"""
+            <div style='background-color: #1e1e1e; padding: 20px; border-radius: 10px; margin: 10px 0; border-left: 5px solid #4CAF50;'>
+                <h3>{selected_role}</h3>
+                <p>{role_info['description']}</p>
+                <h4>Required Skills:</h4>
+                <p>{', '.join(role_info['required_skills'])}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            custom_jd = st.text_area("Paste Job Description here", height=200, help="Paste the full job description to get a semantically accurate match score.")
+            selected_role = "Custom Role"
+            selected_category = "Custom"
+            role_info = {
+                'description': custom_jd,
+                'required_skills': [], # We'll rely on NLP semantic match for custom JD
+                'require_gpa': False
+            }
+            if not custom_jd:
+                st.info("💡 Paste a job description to enable semantic analysis.")
         
         # File Upload
         uploaded_file = st.file_uploader("Upload your resume", type=['pdf', 'docx'])
@@ -1147,12 +1163,12 @@ class ResumeApp:
                 # Save resume data to database
                 resume_data = {
                     'personal_info': {
-                        'name': analysis.get('name', ''),
-                        'email': analysis.get('email', ''),
-                        'phone': analysis.get('phone', ''),
-                        'linkedin': analysis.get('linkedin', ''),
-                        'github': analysis.get('github', ''),
-                        'portfolio': analysis.get('portfolio', '')
+                        'full_name': analysis.get('name') or 'None',
+                        'email': analysis.get('email') or 'None',
+                        'phone': analysis.get('phone') or 'None',
+                        'linkedin': analysis.get('linkedin') or 'None',
+                        'github': analysis.get('github') or 'None',
+                        'portfolio': analysis.get('portfolio') or 'None'
                     },
                     'summary': analysis.get('summary', ''),
                     'target_role': selected_role,
@@ -1244,18 +1260,60 @@ class ResumeApp:
                     
                     st.markdown("</div>", unsafe_allow_html=True)
                                         
+                    # Radar Chart for Section Scores
+                    import plotly.graph_objects as go
+                    
+                    categories = ['Contact', 'Summary', 'Skills', 'Experience', 'Education', 'Format', 'Semantic Match']
+                    scores = [
+                        analysis['section_scores']['contact'],
+                        analysis['section_scores']['summary'],
+                        analysis['section_scores']['skills'],
+                        analysis['section_scores']['experience'],
+                        analysis['section_scores']['education'],
+                        analysis['section_scores']['format'],
+                        analysis['section_scores']['nlp_match']
+                    ]
+                    
+                    fig = go.Figure(data=go.Scatterpolar(
+                        r=scores,
+                        theta=categories,
+                        fill='toself',
+                        line_color='#4CAF50'
+                    ))
+                    
+                    fig.update_layout(
+                        polar=dict(
+                            radialaxis=dict(visible=True, range=[0, 100]),
+                            bgcolor='rgba(0,0,0,0)'
+                        ),
+                        showlegend=False,
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='white'),
+                        margin=dict(l=40, r=40, t=20, b=20)
+                    )
+                    
+                    st.markdown('<div class="feature-card"><h3>Assessment Breakdown</h3>', unsafe_allow_html=True)
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                                        
                     # self.display_analysis_results(analysis_results)
 
                     # Skills Match Card
                     st.markdown("""
                     <div class="feature-card">
-                        <h2>Skills Match</h2>
+                        <h2>Matching Insights</h2>
                     """, unsafe_allow_html=True)
                     
+                    st.metric("Semantic Match (NLP)", f"{int(analysis.get('nlp_match_score', 0))}%")
                     st.metric("Keyword Match", f"{int(analysis.get('keyword_match', {}).get('score', 0))}%")
                     
+                    if analysis['keyword_match']['found_skills']:
+                        st.markdown("#### Matched Skills:")
+                        st.markdown(f"<div style='color: #4CAF50;'>{', '.join(analysis['keyword_match']['found_skills'])}</div>", unsafe_allow_html=True)
+
                     if analysis['keyword_match']['missing_skills']:
-                        st.markdown("#### Missing Skills:")
+                        st.markdown("#### Missing Keywords:")
                         for skill in analysis['keyword_match']['missing_skills']:
                             st.markdown(f"- {skill}")
                     
@@ -1273,110 +1331,134 @@ class ResumeApp:
                     
                     st.markdown("</div>", unsafe_allow_html=True)
                     
-                    # Suggestions Card with improved UI
-                    st.markdown("""
-                    <div class="feature-card">
-                        <h2>📋 Resume Improvement Suggestions</h2>
-                    """, unsafe_allow_html=True)
-                    
-                    # Contact Section
-                    if analysis.get('contact_suggestions'):
-                        st.markdown("""
-                        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
-                            <h3 style='color: #4CAF50; margin-bottom: 10px;'>📞 Contact Information</h3>
-                            <ul style='list-style-type: none; padding-left: 0;'>
-                        """, unsafe_allow_html=True)
-                        for suggestion in analysis.get('contact_suggestions', []):
-                            st.markdown(f"<li style='margin-bottom: 8px;'>✓ {suggestion}</li>", unsafe_allow_html=True)
-                        st.markdown("</ul></div>", unsafe_allow_html=True)
-                    
-                    # Summary Section
-                    if analysis.get('summary_suggestions'):
-                        st.markdown("""
-                        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
-                            <h3 style='color: #4CAF50; margin-bottom: 10px;'>📝 Professional Summary</h3>
-                            <ul style='list-style-type: none; padding-left: 0;'>
-                        """, unsafe_allow_html=True)
-                        for suggestion in analysis.get('summary_suggestions', []):
-                            st.markdown(f"<li style='margin-bottom: 8px;'>✓ {suggestion}</li>", unsafe_allow_html=True)
-                        st.markdown("</ul></div>", unsafe_allow_html=True)
-                    
-                    # Skills Section
-                    if analysis.get('skills_suggestions') or analysis['keyword_match']['missing_skills']:
-                        st.markdown("""
-                        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
-                            <h3 style='color: #4CAF50; margin-bottom: 10px;'>🎯 Skills</h3>
-                            <ul style='list-style-type: none; padding-left: 0;'>
-                        """, unsafe_allow_html=True)
-                        for suggestion in analysis.get('skills_suggestions', []):
-                            st.markdown(f"<li style='margin-bottom: 8px;'>✓ {suggestion}</li>", unsafe_allow_html=True)
-                        if analysis['keyword_match']['missing_skills']:
-                            st.markdown("<li style='margin-bottom: 8px;'>✓ Consider adding these relevant skills:</li>", unsafe_allow_html=True)
-                            for skill in analysis['keyword_match']['missing_skills']:
-                                st.markdown(f"<li style='margin-left: 20px; margin-bottom: 4px;'>• {skill}</li>", unsafe_allow_html=True)
-                        st.markdown("</ul></div>", unsafe_allow_html=True)
-                    
-                    # Experience Section
-                    if analysis.get('experience_suggestions'):
-                        st.markdown("""
-                        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
-                            <h3 style='color: #4CAF50; margin-bottom: 10px;'>💼 Work Experience</h3>
-                            <ul style='list-style-type: none; padding-left: 0;'>
-                        """, unsafe_allow_html=True)
-                        for suggestion in analysis.get('experience_suggestions', []):
-                            st.markdown(f"<li style='margin-bottom: 8px;'>✓ {suggestion}</li>", unsafe_allow_html=True)
-                        st.markdown("</ul></div>", unsafe_allow_html=True)
-                    
-                    # Education Section
-                    if analysis.get('education_suggestions'):
-                        st.markdown("""
-                        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
-                            <h3 style='color: #4CAF50; margin-bottom: 10px;'>🎓 Education</h3>
-                            <ul style='list-style-type: none; padding-left: 0;'>
-                        """, unsafe_allow_html=True)
-                        for suggestion in analysis.get('education_suggestions', []):
-                            st.markdown(f"<li style='margin-bottom: 8px;'>✓ {suggestion}</li>", unsafe_allow_html=True)
-                        st.markdown("</ul></div>", unsafe_allow_html=True)
-                    
-                    # General Formatting Suggestions
-                    if analysis.get('format_suggestions'):
-                        st.markdown("""
-                        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
-                            <h3 style='color: #4CAF50; margin-bottom: 10px;'>📄 Formatting</h3>
-                            <ul style='list-style-type: none; padding-left: 0;'>
-                        """, unsafe_allow_html=True)
-                        for suggestion in analysis.get('format_suggestions', []):
-                            st.markdown(f"<li style='margin-bottom: 8px;'>✓ {suggestion}</li>", unsafe_allow_html=True)
-                        st.markdown("</ul></div>", unsafe_allow_html=True)
-                    
                     st.markdown("</div>", unsafe_allow_html=True)
                 
-
-                
-                # Course Recommendations
+                # Structured Parsing Results Section
                 st.markdown("""
                 <div class="feature-card">
-                    <h2>📚 Recommended Courses</h2>
+                    <h2>� Structured Parsing Results</h2>
                 """, unsafe_allow_html=True)
                 
-                # Get courses based on role and category
-                courses = get_courses_for_role(selected_role)
-                if not courses:
-                    category = get_category_for_role(selected_role)
-                    courses = COURSES_BY_CATEGORY.get(category, {}).get(selected_role, [])
+                parsing_tabs = st.tabs(["👤 Personal", "🎓 Education", "💼 Experience", "🚀 Projects", "🛠️ Skills"])
                 
-                # Display courses in a grid
-                cols = st.columns(2)
-                for i, course in enumerate(courses[:6]):  # Show top 6 courses
-                    with cols[i % 2]:
-                        st.markdown(f"""
-                        <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
-                            <h4>{course[0]}</h4>
-                            <a href='{course[1]}' target='_blank'>View Course</a>
-                        </div>
-                        """, unsafe_allow_html=True)
+                with parsing_tabs[0]:
+                    col_p1, col_p2 = st.columns(2)
+                    with col_p1:
+                        st.markdown(f"**Name:** {analysis.get('name')}")
+                        st.markdown(f"**Email:** {analysis.get('email')}")
+                        st.markdown(f"**Phone:** {analysis.get('phone')}")
+                    with col_p2:
+                        st.markdown(f"**LinkedIn:** {analysis.get('linkedin')}")
+                        st.markdown(f"**GitHub:** {analysis.get('github')}")
+                        st.markdown(f"**Portfolio:** {analysis.get('portfolio')}")
+                
+                with parsing_tabs[1]:
+                    if analysis.get('education'):
+                        for edu in analysis['education']:
+                            st.info(edu)
+                    else:
+                        st.warning("No education details found.")
+                
+                with parsing_tabs[2]:
+                    if analysis.get('experience'):
+                        for exp in analysis['experience']:
+                            st.info(exp)
+                    else:
+                        st.warning("No work experience details found.")
+                
+                with parsing_tabs[3]:
+                    if analysis.get('projects'):
+                        for proj in analysis['projects']:
+                            st.info(proj)
+                    else:
+                        st.warning("No projects found.")
+                
+                with parsing_tabs[4]:
+                    if analysis.get('skills'):
+                        # Display skills as tags first
+                        skills_html = "".join([f"<span style='background-color: #4CAF50; color: white; padding: 5px 10px; border-radius: 15px; margin: 5px; display: inline-block;'>{s}</span>" for s in analysis['skills']])
+                        st.markdown(skills_html, unsafe_allow_html=True)
+                        
+                        st.markdown("---")
+                        
+                        # Then show the visualization
+                        import plotly.express as px
+                        skills_df = pd.DataFrame({'Skill': analysis['skills'], 'Count': [1]*len(analysis['skills'])})
+                        if not skills_df.empty:
+                            fig_skills = px.bar(skills_df.head(15), x='Skill', y='Count', 
+                                                title="Skills Distribution Overview",
+                                                color_discrete_sequence=['#4CAF50'])
+                            fig_skills.update_layout(
+                                paper_bgcolor='rgba(0,0,0,0)',
+                                plot_bgcolor='rgba(0,0,0,0)',
+                                font=dict(color='white'),
+                                showlegend=False,
+                                yaxis=dict(visible=False),
+                                height=300,
+                                margin=dict(l=20, r=20, t=40, b=20)
+                            )
+                            st.plotly_chart(fig_skills, use_container_width=True)
+                    else:
+                        st.warning("No skills extracted.")
                 
                 st.markdown("</div>", unsafe_allow_html=True)
+                
+                # Suggestions Section
+                st.markdown("""
+                <div class="feature-card">
+                    <h2>📋 Improvement Suggestions</h2>
+                """, unsafe_allow_html=True)
+                
+                sug_col1, sug_col2 = st.columns(2)
+                with sug_col1:
+                    if analysis.get('contact_suggestions'):
+                        st.markdown("**📞 Contact:**")
+                        for s in analysis['contact_suggestions']: st.markdown(f"- {s}")
+                    if analysis.get('summary_suggestions'):
+                        st.markdown("**📝 Summary:**")
+                        for s in analysis['summary_suggestions']: st.markdown(f"- {s}")
+                    if analysis.get('skills_suggestions'):
+                        st.markdown("**🎯 Skills:**")
+                        for s in analysis['skills_suggestions']: st.markdown(f"- {s}")
+                
+                with sug_col2:
+                    if analysis.get('experience_suggestions'):
+                        st.markdown("**💼 Experience:**")
+                        for s in analysis['experience_suggestions']: st.markdown(f"- {s}")
+                    if analysis.get('education_suggestions'):
+                        st.markdown("**🎓 Education:**")
+                        for s in analysis['education_suggestions']: st.markdown(f"- {s}")
+                    if analysis.get('format_suggestions'):
+                        st.markdown("**📄 Formatting:**")
+                        for s in analysis['format_suggestions']: st.markdown(f"- {s}")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+
+                if matching_mode == "Select Pre-defined Role":
+                    # Course Recommendations
+                    st.markdown("""
+                    <div class="feature-card">
+                        <h2>📚 Recommended Courses</h2>
+                    """, unsafe_allow_html=True)
+                    
+                    # Get courses based on role and category
+                    courses = get_courses_for_role(selected_role)
+                    if not courses:
+                        category = get_category_for_role(selected_role)
+                        courses = COURSES_BY_CATEGORY.get(category, {}).get(selected_role, [])
+                    
+                    # Display courses in a grid
+                    cols = st.columns(2)
+                    for i, course in enumerate(courses[:6]):  # Show top 6 courses
+                        with cols[i % 2]:
+                            st.markdown(f"""
+                            <div style='background-color: #1e1e1e; padding: 15px; border-radius: 10px; margin: 10px 0;'>
+                                <h4>{course[0]}</h4>
+                                <a href='{course[1]}' target='_blank'>View Course</a>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
                 
                 # Learning Resources
                 st.markdown("""

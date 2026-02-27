@@ -1,4 +1,6 @@
 import re
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 class ResumeAnalyzer:
     def __init__(self):
@@ -62,6 +64,26 @@ class ResumeAnalyzer:
             'found_skills': found_skills,
             'missing_skills': missing_skills
         }
+        
+    def calculate_nlp_match(self, resume_text, jd_text):
+        """Calculate semantic similarity between resume and job description using TF-IDF"""
+        if not jd_text or not resume_text:
+            return 0
+            
+        try:
+            # Create the vectorizer
+            vectorizer = TfidfVectorizer(stop_words='english')
+            
+            # Combine texts for vectorization
+            tfidf_matrix = vectorizer.fit_transform([resume_text, jd_text])
+            
+            # Calculate cosine similarity
+            similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
+            
+            return float(similarity[0][0]) * 100
+        except Exception as e:
+            print(f"Error calculating NLP match: {e}")
+            return 0
         
     def check_resume_sections(self, text):
         text = text.lower()
@@ -164,12 +186,12 @@ class ResumeAnalyzer:
         name = text.split('\n')[0].strip()
         
         return {
-            'name': name if len(name) > 0 else 'Unknown',
-            'email': email.group(0) if email else '',
-            'phone': phone.group(0) if phone else '',
-            'linkedin': linkedin.group(0) if linkedin else '',
-            'github': github.group(0) if github else '',
-            'portfolio': ''  # Can be enhanced later
+            'name': name if len(name) > 0 else 'None',
+            'email': email.group(0) if email else 'None',
+            'phone': phone.group(0) if phone else 'None',
+            'linkedin': linkedin.group(0) if linkedin else 'None',
+            'github': github.group(0) if github else 'None',
+            'portfolio': 'None'  # Can be enhanced later
         }
 
     def extract_education(self, text):
@@ -537,15 +559,30 @@ class ResumeAnalyzer:
         experience_score = 100 - (len(experience_suggestions) * 25)
         education_score = 100 - (len(education_suggestions) * 25)
         
-        # Calculate overall ATS score with weighted components
+        # Calculate NLP Match Score if JD text is provided
+        jd_text = job_requirements.get('description', '') + " " + " ".join(job_requirements.get('required_skills', []))
+        nlp_match_score = self.calculate_nlp_match(text, jd_text)
+        
+        # Weighted ATS Score Calculation (New Custom Algorithm)
+        # 30% NLP Semantic Match
+        # 25% Keyword/Skills Match
+        # 15% Experience Quality
+        # 10% Format Quality
+        # 10% Summary/Objective
+        # 10% Contact/Section Completeness
+        
         ats_score = (
-            int(round(contact_score * 0.1)) +      # 10% weight for contact info
-            int(round(summary_score * 0.1)) +      # 10% weight for summary
-            int(round(skills_score * 0.3)) +       # 30% weight for skills match
-            int(round(experience_score * 0.2)) +   # 20% weight for experience
-            int(round(education_score * 0.1)) +    # 10% weight for education
-            int(round(format_score * 0.2))         # 20% weight for formatting
+            int(round(nlp_match_score * 0.35)) +    # Increased weight for NLP
+            int(round(skills_score * 0.25)) + 
+            int(round(experience_score * 0.15)) +
+            int(round(format_score * 0.10)) +
+            int(round(summary_score * 0.05)) +
+            int(round(contact_score * 0.05)) +
+            int(round((section_score/100 * 100) * 0.05))
         )
+        
+        # Ensure score is within 0-100
+        ats_score = min(100, max(0, ats_score))
         
         # Combine all suggestions into a single list
         suggestions = []
@@ -556,12 +593,16 @@ class ResumeAnalyzer:
         suggestions.extend(education_suggestions)
         suggestions.extend(format_suggestions)
         
+        if nlp_match_score < 50:
+            suggestions.append("Your resume's content doesn't strongly match the job description. Consider using more industry-specific terminology.")
+        
         if not suggestions:
             suggestions.append("Your resume is well-optimized for ATS systems")
         
         return {
             **personal_info,  # Include extracted personal info
             'ats_score': ats_score,
+            'nlp_match_score': nlp_match_score,
             'document_type': 'resume',
             'keyword_match': keyword_match,
             'section_score': section_score,
@@ -584,6 +625,7 @@ class ResumeAnalyzer:
                 'skills': skills_score,
                 'experience': experience_score,
                 'education': education_score,
-                'format': format_score
+                'format': format_score,
+                'nlp_match': nlp_match_score
             }
         }

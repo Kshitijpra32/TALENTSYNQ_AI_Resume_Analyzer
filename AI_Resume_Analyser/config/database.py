@@ -105,12 +105,12 @@ def save_resume_data(data):
             experience, projects, skills, template
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            personal_info.get('full_name', ''),
-            personal_info.get('email', ''),
-            personal_info.get('phone', ''),
-            personal_info.get('linkedin', ''),
-            personal_info.get('github', ''),
-            personal_info.get('portfolio', ''),
+            personal_info.get('full_name', personal_info.get('name', 'None')) or 'None',
+            personal_info.get('email', 'None') or 'None',
+            personal_info.get('phone', 'None') or 'None',
+            personal_info.get('linkedin', 'None') or 'None',
+            personal_info.get('github', 'None') or 'None',
+            personal_info.get('portfolio', 'None') or 'None',
             data.get('summary', ''),
             data.get('target_role', ''),
             data.get('target_category', ''),
