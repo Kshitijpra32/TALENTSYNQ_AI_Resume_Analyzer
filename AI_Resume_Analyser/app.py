@@ -2,6 +2,7 @@
 TALENTSYNQ - Main Application
 """
 import streamlit as st
+from pathlib import Path
 
 # Set page config at the very beginning
 st.set_page_config(
@@ -100,9 +101,10 @@ class ResumeApp:
         # Initialize database
         init_database()
         
-        # Load external CSS
-        with open('style/style.css') as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+        # Load external CSS relative to this file (deploy-safe path)
+        css_path = Path(__file__).resolve().parent / "style" / "style.css"
+        with css_path.open(encoding="utf-8") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
         
         # Load Google Fonts
         st.markdown("""
