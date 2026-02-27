@@ -1,10 +1,29 @@
 import sqlite3
 import os
+import tempfile
 from datetime import datetime
 
 # Always save database in the project root folder (same as config folder's parent)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, 'resume_data.db')
+
+
+def _resolve_db_path():
+    """Resolve a writable database path for both local and cloud environments."""
+    custom_path = os.getenv("TALENTSYNQ_DB_PATH")
+    if custom_path:
+        return custom_path
+
+    local_path = os.path.join(BASE_DIR, "resume_data.db")
+    local_dir = os.path.dirname(local_path) or "."
+
+    # Streamlit Cloud deployments can mount source paths as read-only.
+    if os.access(local_dir, os.W_OK):
+        return local_path
+
+    return os.path.join(tempfile.gettempdir(), "resume_data.db")
+
+
+DB_PATH = _resolve_db_path()
 
 def get_database_connection():
     """Create and return a database connection"""
@@ -86,6 +105,15 @@ def init_database():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
+
+    # Ensure default admin exists for first-time deployments.
+    cursor.execute(
+        '''
+        INSERT OR IGNORE INTO admin (email, password)
+        VALUES (?, ?)
+        ''',
+        ('admin@example.com', 'admin123')
+    )
     
     conn.commit()
     conn.close()
@@ -267,7 +295,11 @@ def verify_admin(email, password):
     cursor = conn.cursor()
     
     try:
-        cursor.execute('SELECT * FROM admin WHERE email = ? AND password = ?', (email, password))
+        normalized_email = (email or "").strip().lower()
+        cursor.execute(
+            'SELECT 1 FROM admin WHERE LOWER(email) = ? AND password = ?',
+            (normalized_email, password)
+        )
         result = cursor.fetchone()
         return bool(result)
     except Exception as e:
