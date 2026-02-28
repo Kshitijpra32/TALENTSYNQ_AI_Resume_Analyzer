@@ -11,6 +11,7 @@ TALENTSYNQ is your all-in-one AI-powered platform to analyze, optimize, and craf
 [![GitHub](https://img.shields.io/badge/GitHub-Kshitijpra32-black?style=flat&logo=github)](https://github.com/Kshitijpra32)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Kshitij%20Pathak-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/kshitijpathak07/)
 [![Email](https://img.shields.io/badge/Email-pathakkshitij32%40gmail.com-red?style=flat&logo=gmail)](mailto:pathakkshitij32@gmail.com)
+[![Streamlit App](https://img.shields.io/badge/Streamlit-Live_App-FF4B4B?style=for-the-badge&logo=streamlit)](https://talentsynq.streamlit.app)
 
 </div>
 
@@ -39,18 +40,18 @@ TALENTSYNQ is your all-in-one AI-powered platform to analyze, optimize, and craf
 
 ## ⚙️ Tech Stack
 
-| **Technology**       | **Role**                                                                |
+| **Technology**        | **Role**                                                                |
 |-----------------------|-------------------------------------------------------------------------|
-| Streamlit             | Builds interactive and user-friendly web app                           |
+| Streamlit             | Builds interactive and user-friendly web app                            |
 | Python                | Core programming language                                               |
-| SQLite3               | Local database for resume data storage                                 |
-| spaCy                 | NLP for keyword analysis and ATS compatibility checks                  |
-| python-docx           | Word document generation for resume builder                            |
+| SQLite3               | Local database for resume data storage                                  |
+| spaCy                 | NLP for keyword analysis and ATS compatibility checks                   |
+| python-docx           | Word document generation for resume builder                             |
 | PyPDF2 / pdfminer     | PDF text extraction                                                     |
-| scikit-learn          | Machine learning for resume optimization                               |
-| Plotly                | Interactive charts for dashboard analytics                             |
-| NLTK                  | Tokenization and text preprocessing                                    |
-| openpyxl              | Excel export for data visualization                                    |
+| scikit-learn          | Machine learning for resume optimization                                |
+| Plotly                | Interactive charts for dashboard analytics                              |
+| NLTK                  | Tokenization and text preprocessing                                     |
+| openpyxl              | Excel export for data visualization                                     |
 
 ---
 
@@ -105,11 +106,11 @@ streamlit run app.py
 
 ## 🎯 Features
 
-| **Feature**                   | **Description**                                                                 |
-|-------------------------------|---------------------------------------------------------------------------------|
-| 🔍 **Resume Analysis**         | ATS score, keyword gaps, and skills recommendations                            |
-| ✨ **Customizable Templates**  | 4 sleek designs: Modern, Minimal, Professional, Creative                       |
-| 📈 **AI-Driven Insights**      | Smart suggestions for content, formatting, and keywords                        |
+| **Feature**                    | **Description**                                                                 |
+|-------------------------------|----------------------------------------------------------------------------------|
+| 🔍 **Resume Analysis**         | ATS score, keyword gaps, and skills recommendations                             |
+| ✨ **Customizable Templates**  | 4 sleek designs: Modern, Minimal, Professional, Creative                        |
+| 📈 **AI-Driven Insights**      | Smart suggestions for content, formatting, and keywords                         |
 | 🎯 **Role-specific Guidance**  | Tailored recommendations for matching job descriptions                         |
 | 📊 **Analytics Dashboard**     | Visual overview of resume performances and trends                              |
 | 🎓 **Course Recommendations**  | Role-based course and YouTube video suggestions                                |
