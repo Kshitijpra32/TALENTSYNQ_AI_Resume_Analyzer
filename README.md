@@ -11,7 +11,7 @@ TALENTSYNQ is your all-in-one AI-powered platform to analyze, optimize, and craf
 [![GitHub](https://img.shields.io/badge/GitHub-Kshitijpra32-black?style=flat&logo=github)](https://github.com/Kshitijpra32)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Kshitij%20Pathak-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/kshitijpathak07/)
 [![Email](https://img.shields.io/badge/Email-pathakkshitij32%40gmail.com-red?style=flat&logo=gmail)](mailto:pathakkshitij32@gmail.com)
-[![Streamlit App](https://img.shields.io/badge/Streamlit-Live_App-FF4B4B?style=for-the-badge&logo=streamlit)](https://talentsynq.streamlit.app)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Live_App-FF4B4B?style=flat&logo=streamlit)](https://talentsynq.streamlit.app)
 
 </div>
 
