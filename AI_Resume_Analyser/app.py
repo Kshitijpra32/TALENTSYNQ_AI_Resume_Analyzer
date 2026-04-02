@@ -1016,25 +1016,21 @@ class ResumeApp:
         # Profile Section
         st.markdown(f"""
             <div class="profile-section">
-                <img src="{image_base64 if image_base64 else 'https://avatars.githubusercontent.com/u/145741215?s=400&u=ca63443bfac9e52356960473a6f7b3f75f43142f&v=4'}" 
-                     alt="Kshitij Pathak" 
-                     class="profile-image"
-                     onerror="this.onerror=null; this.src='https://avatars.githubusercontent.com/u/145741215?s=400&u=ca63443bfac9e52356960473a6f7b3f75f43142f&v=4';">
-                <h2 class="profile-name">Kshitij Pathak</h2>
+                <h2 class="profile-name">Divyesh Dawale</h2>
                 <p class="profile-title">Full Stack Developer & AI/ML Enthusiast</p>
                 <div class="social-links">
-                    <a href="https://github.com/Kshitijpra32" class="social-link" target="_blank">
+                    <a href="https://github.com/DivyeshDawale" class="social-link" target="_blank">
                         <i class="fab fa-github"></i>
                     </a>
-                    <a href="https://www.linkedin.com/in/kshitijpathak07/" class="social-link" target="_blank">
+                    <a href="https://www.linkedin.com/in/divyeshdawale/" class="social-link" target="_blank">
                         <i class="fab fa-linkedin"></i>
                     </a>
-                    <a href="mailto:pathakkshitij32@gmail.com" class="social-link" target="_blank">
+                    <a href="mailto:divyeshdawale@gmail.com" class="social-link" target="_blank">
                         <i class="fas fa-envelope"></i>
                     </a>
                 </div>
                 <p class="bio-text">
-                    Hello! I'm Kshitij Pathak, a passionate Full Stack Developer with expertise in AI and Machine Learning. 
+                    Hello! I'm Divyesh Dawale, a passionate Full Stack Developer with expertise in AI and Machine Learning. 
                     I created TALENTSYNQ to revolutionize how job seekers approach their career journey. 
                     With my background in both software development and AI, I've designed this platform to 
                     provide intelligent, data-driven insights for resume optimization.
